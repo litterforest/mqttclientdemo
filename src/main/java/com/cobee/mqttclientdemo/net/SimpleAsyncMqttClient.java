@@ -328,28 +328,28 @@ public class SimpleAsyncMqttClient implements IMqttClient {
      */
     public void connect() throws MqttException {
 
-        lock.lock();
+        if (client != null && !client.isConnected())
+        {
+            lock.lock();
+            try {
+                if (client != null && !client.isConnected())
+                {
+                    client.connect(mqttConnectOptions,"Connect sample context", new IMqttActionListener() {
 
-        try {
-            if (client.isConnected())
-            {
-                return;
+                        public void onSuccess(IMqttToken asyncActionToken) {
+                            System.out.println("连接broker成功");
+                            state = CONNECTED;
+                        }
+
+                        public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                            System.out.println("连接broker失败");
+                        }
+
+                    }).waitForCompletion();
+                }
+            } finally {
+                lock.unlock();
             }
-
-            client.connect(mqttConnectOptions,"Connect sample context", new IMqttActionListener() {
-
-                public void onSuccess(IMqttToken asyncActionToken) {
-                    System.out.println("连接broker成功");
-                    state = CONNECTED;
-                }
-
-                public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                    System.out.println("连接broker失败");
-                }
-
-            }).waitForCompletion();
-        } finally {
-            lock.unlock();
         }
 
     }
